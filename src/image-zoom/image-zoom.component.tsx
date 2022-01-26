@@ -18,11 +18,11 @@ export default class ImageViewer extends React.Component<ImageZoomProps, ImageZo
   private animatedPositionY = new Animated.Value(0);
 
   // 缩放大小
-  private scale = 1;
-  private animatedScale = new Animated.Value(1);
+  private initialScale = this.props.initialScale || 1;
+  private scale = this.initialScale;
+  private animatedScale = new Animated.Value(this.initialScale);
   private zoomLastDistance: number | null = null;
   private zoomCurrentDistance = 0;
-  private defaultScale = this.props.minScale || 0;
 
   // 上次手按下去的时间
   private lastTouchStartTime = 0;
@@ -125,9 +125,9 @@ export default class ImageViewer extends React.Component<ImageZoomProps, ImageZo
           this.isDoubleClick = true;
 
           if (this.props.enableDoubleClickZoom) {
-            if (this.scale > this.defaultScale || this.scale < this.defaultScale) {
+            if (this.scale !== this.initialScale) {
               // 回归原位
-              this.scale = this.defaultScale;
+              this.scale = this.initialScale;
 
               this.positionX = 0;
               this.positionY = 0;
@@ -138,7 +138,7 @@ export default class ImageViewer extends React.Component<ImageZoomProps, ImageZo
               const beforeScale = this.scale;
 
               // 开始缩放
-              this.scale = this.defaultScale * 2;
+              this.scale = this.initialScale * 2;
 
               // 缩放 diff
               const diffScale = this.scale - beforeScale;
@@ -465,8 +465,8 @@ export default class ImageViewer extends React.Component<ImageZoomProps, ImageZo
   public resetScale = (): void => {
     this.positionX = 0;
     this.positionY = 0;
-    this.scale = this.defaultScale;
-    this.animatedScale.setValue(this.defaultScale);
+    this.scale = this.initialScale;
+    this.animatedScale.setValue(this.initialScale);
   };
 
   public panResponderReleaseResolve = (): void => {
@@ -481,9 +481,9 @@ export default class ImageViewer extends React.Component<ImageZoomProps, ImageZo
       }
     }
 
-    if (this.props.enableCenterFocus && this.scale < this.defaultScale) {
-      // 如果缩放小于1，强制重置为 1
-      this.scale = this.defaultScale;
+    if (this.props.enableCenterFocus && this.scale < this.initialScale) {
+      // 如果缩放小于`this.initialScale`，强制重置为 `this.initialScale`
+      this.scale = this.initialScale;
       Animated.timing(this.animatedScale, {
         toValue: this.scale,
         duration: 100,
@@ -544,7 +544,7 @@ export default class ImageViewer extends React.Component<ImageZoomProps, ImageZo
     }
 
     // 拖拽正常结束后,如果没有缩放,直接回到0,0点
-    if (this.props.enableCenterFocus && this.scale === this.defaultScale) {
+    if (this.props.enableCenterFocus && this.scale === this.initialScale) {
       this.positionX = 0;
       this.positionY = 0;
       Animated.timing(this.animatedPositionX, {
@@ -572,7 +572,7 @@ export default class ImageViewer extends React.Component<ImageZoomProps, ImageZo
     if (this.props.centerOn) {
       this.centerOn(this.props.centerOn);
     }
-    this.scale = this.defaultScale;
+    this.scale = this.initialScale;
     this.animatedScale.setValue(this.scale);
   }
 
@@ -644,7 +644,7 @@ export default class ImageViewer extends React.Component<ImageZoomProps, ImageZo
    * 重置大小和位置
    */
   public reset(): void {
-    this.scale = this.defaultScale;
+    this.scale = this.initialScale;
     this.animatedScale.setValue(this.scale);
     this.positionX = 0;
     this.animatedPositionX.setValue(this.positionX);
